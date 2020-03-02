@@ -77,6 +77,15 @@ def partial_ratio(s1, s2):
   return [max_score*100, matching_block_of_max, substrings]
 
 
+def get_colored_html(pdf_content, substrings):
+    output = ""
+    for substring in substrings:
+        output = pdf_content.replace(pdf_content[substring[0]:substring[1]], "<span>"+ pdf_content[substring[0]:substring[1]] + "</span>")
+    
+    print(output)
+    return output
+
+
 def match_content(Str1, Str2):
     ratio, matched_blocks, substrings = partial_ratio(Str1.lower(), Str2.lower())
     for substring in substrings:
@@ -136,6 +145,7 @@ def mainEngine(content):
         if match_percentage > highest_percentage:
             highest_percentage = match_percentage
         print(matched_string)
+        ans += get_colored_html(content, matched_string)
         ans += "{}% of content was copied from {}\n <br>".format(match_percentage, item['link'])
 
     ans += "<br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
