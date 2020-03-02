@@ -71,15 +71,18 @@ def partial_ratio(s1, s2):
   for match in matching_block_of_max:
       # print(shorter[match.a:match.a + match.size], end=" =?? ")
       # print(long_substr[match.b:match.b + match.size])
-      substrings.append([match.b, match.b + match.size])
+      if(match.size > 10):
+        substrings.append([match.a, match.a + match.size])
 
   return [max_score*100, matching_block_of_max, substrings]
 
 
 def match_content(Str1, Str2):
-    ratio, matched_blocks, substings = partial_ratio(Str1.lower(), Str2.lower())
-
-    return ratio
+    ratio, matched_blocks, substrings = partial_ratio(Str1.lower(), Str2.lower())
+    for substring in substrings:
+        print(Str1[substring[0]:substring[1]], end="\n\n---------\n")
+    print("======================")
+    return [ratio, substrings]
 
 
     # if(match_percentage > 30):
@@ -128,10 +131,11 @@ def mainEngine(content):
             continue
 
         scrapped_content = web_scrape(item['link'])
-        match_percentage = match_content(content, scrapped_content)
+        match_percentage, matched_string = match_content(content, scrapped_content)
 
         if match_percentage > highest_percentage:
             highest_percentage = match_percentage
+        print(matched_string)
         ans += "{}% of content was copied from {}\n <br>".format(match_percentage, item['link'])
 
     ans += "<br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
