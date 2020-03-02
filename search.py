@@ -23,8 +23,11 @@ my_cse_id = "014265856113199739783:ik1fgtrafyo"
 
 
 content = """
-NBA operates on an online system of accreditation called "Accreditation Workflow Management System (AWMS), which includes institution registration.
+Python was conceived in the late 1980s as a successor to the ABC language. Python 2.0, released in 2000, introduced features like list comprehensions and a garbage collection system capable of collecting reference cycles. Python interpreters are available for many operating systems. A global community of programmers develops and maintains CPython, an open source[33] reference implementation.
 """
+
+colorIndex = -1
+
 
 def google_search(search_term, api_key, cse_id, **kwargs):
     service = build("customsearch", "v1", developerKey=api_key)
@@ -76,21 +79,25 @@ def partial_ratio(s1, s2):
 
   return [max_score*100, matching_block_of_max, substrings]
 
-
-def get_colored_html(pdf_content, substrings):
-    output = ""
+def get_colored_html(pdf_content, substrings, link):
+    colors = ['#ff330', '#990', '#f09', '#009', '#0f0', '#00f', '#09f']
+    output = pdf_content
     for substring in substrings:
-        output = pdf_content.replace(pdf_content[substring[0]:substring[1]], "<span>"+ pdf_content[substring[0]:substring[1]] + "</span>")
+        output = output.replace(
+            pdf_content[substring[0]:substring[1]], 
+            "<span style='background-color:"+ colors[colorIndex] +";'>"+ pdf_content[substring[0]:substring[1]] + "</span>"
+        )
     
     print(output)
+    print("Copied from "+link , end="\n\n-----")
     return output
 
 
 def match_content(Str1, Str2):
     ratio, matched_blocks, substrings = partial_ratio(Str1.lower(), Str2.lower())
-    for substring in substrings:
-        print(Str1[substring[0]:substring[1]], end="\n\n---------\n")
-    print("======================")
+    # for substring in substrings:
+    #     print(Str1[substring[0]:substring[1]], end="\n\n---------\n")
+    # print("======================")
     return [ratio, substrings]
 
 
@@ -144,8 +151,8 @@ def mainEngine(content):
 
         if match_percentage > highest_percentage:
             highest_percentage = match_percentage
-        print(matched_string)
-        ans += get_colored_html(content, matched_string)
+
+        ans += get_colored_html(content, matched_string, item['link'], colorIndex)
         ans += "{}% of content was copied from {}\n <br>".format(match_percentage, item['link'])
 
     ans += "<br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
@@ -158,7 +165,7 @@ def mainEngine(content):
 
 
 # content = str(input())
-print(mainEngine(content))
+mainEngine(content)
 
 # scrapped_content = web_scrape("https://en.wikipedia.org/wiki/Michael_Madana_Kama_Rajan")
 # match_content(content, scrapped_content)
