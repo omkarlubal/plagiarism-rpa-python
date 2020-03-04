@@ -22,13 +22,6 @@ my_api_key = "AIzaSyBco2Cb9AikTpq74k70LyrJNBWDz9fQk9I"
 my_cse_id = "014265856113199739783:ik1fgtrafyo"
 
 
-content = """
-Python was conceived in the late 1980s as a successor to the ABC language. Python 2.0, released in 2000, introduced features like list comprehensions and a garbage collection system capable of collecting reference cycles. Python interpreters are available for many operating systems. A global community of programmers develops and maintains CPython, an open source[33] reference implementation.
-"""
-
-colorIndex = -1
-
-
 def google_search(search_term, api_key, cse_id, **kwargs):
     service = build("customsearch", "v1", developerKey=api_key)
     res = service.cse().list(q=search_term, cx=cse_id, **kwargs).execute()
@@ -79,17 +72,21 @@ def partial_ratio(s1, s2):
 
   return [max_score*100, matching_block_of_max, substrings]
 
-def get_colored_html(pdf_content, substrings, link):
-    colors = ['#ff330', '#990', '#f09', '#009', '#0f0', '#00f', '#09f']
-    output = pdf_content
+def get_colored_html(pdf_content, substrings, link, index):
+    if(len(substrings) <= 0):
+        return ""
+
+    current_color = colors[index % (len(colors) - 1)]
+    output = ""
+    lastIndex = None
     for substring in substrings:
-        output = output.replace(
-            pdf_content[substring[0]:substring[1]], 
-            "<span style='background-color:"+ colors[colorIndex] +";'>"+ pdf_content[substring[0]:substring[1]] + "</span>"
-        )
-    
-    print(output)
-    print("Copied from "+link , end="\n\n-----")
+        output += pdf_content[lastIndex:substring[0]]
+        output += "<span style='background-color:"+current_color+"'>"+pdf_content[substring[0]:substring[1]] + "</span>"
+        lastIndex = substring[1]
+        
+    lastItem = substrings[len(substrings) - 1][1]
+    output += pdf_content[lastItem:None]
+
     return output
 
 
@@ -135,6 +132,7 @@ def mainEngine(content):
     data = json.loads(json.dumps(result))
     highest_percentage = 0;
     ans = ""
+    index = 0
     for item in data['items']:
         if (item['link'].find('.pdf') > 0):
             # try:
@@ -148,12 +146,12 @@ def mainEngine(content):
 
         scrapped_content = web_scrape(item['link'])
         match_percentage, matched_string = match_content(content, scrapped_content)
-
         if match_percentage > highest_percentage:
             highest_percentage = match_percentage
 
-        ans += get_colored_html(content, matched_string, item['link'], colorIndex)
+        ans += get_colored_html(content, matched_string, item['link'], index)
         ans += "{}% of content was copied from {}\n <br>".format(match_percentage, item['link'])
+        index += 1
 
     ans += "<br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
 
@@ -165,7 +163,15 @@ def mainEngine(content):
 
 
 # content = str(input())
-mainEngine(content)
 
+content = """
+Python was conceived in the late 1980s as a successor to the ABC language. Python 2.0, released in 2000, introduced features like list comprehensions and a garbage collection system capable of collecting reference cycles. Python interpreters are available for many operating systems. A global community of programmers develops and maintains CPython, an open source[33] reference implementation.
+"""
+
+colors = ['#9de5fc', '#d1fc9d', '#fcfc9d', '#fcb39d', '#a29dfc', '#e79dfc', '#a89dfc', '#49e65e', '#49c1e6', '#fff242']
+
+htmlFile = open("out.html", "w");
+htmlFile.write(mainEngine(content))
+htmlFile.close()
 # scrapped_content = web_scrape("https://en.wikipedia.org/wiki/Michael_Madana_Kama_Rajan")
 # match_content(content, scrapped_content)
