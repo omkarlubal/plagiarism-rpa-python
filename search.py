@@ -29,8 +29,11 @@ def google_search(search_term, api_key, cse_id, **kwargs):
 
 
 def web_scrape(link):
-    r = requests.get(link)
-    soup = BeautifulSoup(r.content, 'html.parser').text
+    try:
+        r = requests.get(link)
+        soup = BeautifulSoup(r.content, 'html.parser').text
+    except:
+        soup = ''
     return soup
 
 def partial_ratio(s1, s2):
@@ -77,7 +80,7 @@ def get_colored_html(pdf_content, substrings, link, index):
         return ""
 
     current_color = colors[index % (len(colors) - 1)]
-    output = ""
+    output = "<br><hr><br>"
     lastIndex = None
     for substring in substrings:
         output += pdf_content[lastIndex:substring[0]]
@@ -85,7 +88,7 @@ def get_colored_html(pdf_content, substrings, link, index):
         lastIndex = substring[1]
         
     lastItem = substrings[len(substrings) - 1][1]
-    output += pdf_content[lastItem:None]
+    output += pdf_content[lastItem:None] + "<br>"
 
     return output
 
@@ -115,8 +118,7 @@ def convert_pdf_to_txt(path):
     caching = True
     pagenos = set()
 
-    for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password, caching=caching,
-                                  check_extractable=True):
+    for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password, caching=caching, check_extractable=True):
         interpreter.process_page(page)
 
     text = retstr.getvalue()
@@ -135,13 +137,6 @@ def mainEngine(content):
     index = 0
     for item in data['items']:
         if (item['link'].find('.pdf') > 0):
-            # try:
-            #     urlretrieve(item['link'], "download.pdf")
-            #     scrapped_content = convert_pdf_to_txt("download.pdf");
-            #     match_content(content, scrapped_content)
-
-            # except:
-            #     print("")
             continue
 
         scrapped_content = web_scrape(item['link'])
@@ -149,8 +144,9 @@ def mainEngine(content):
         if match_percentage > highest_percentage:
             highest_percentage = match_percentage
 
+        print(matched_string)
         ans += get_colored_html(content, matched_string, item['link'], index)
-        ans += "{}% of content was copied from {}\n <br>".format(match_percentage, item['link'])
+        ans += "<br>{}% of content was copied from <b>{}</b>\n <br>".format(match_percentage, item['link'])
         index += 1
 
     ans += "<br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
@@ -158,14 +154,14 @@ def mainEngine(content):
     if highest_percentage >= 70:
         ans += "<br> \nSorry but your paper is rejected due to high plagiarism. Please try again later."
     else:
-        ans += "<br> \nCongratulations your paper has been successfully accepted!"
+        ans += "<br> \nCongratulations your paper has been accepted!"
     return ans
 
 
 # content = str(input())
 
 content = """
-Python was conceived in the late 1980s as a successor to the ABC language. Python 2.0, released in 2000, introduced features like list comprehensions and a garbage collection system capable of collecting reference cycles. Python interpreters are available for many operating systems. A global community of programmers develops and maintains CPython, an open source[33] reference implementation.
+Robotic Process Automation is the technology that allows anyone today to configure computer software, or a “robot” to emulate and integrate the actions of a human interacting within digital systems to execute a business process. RPA robots utilize the user interface to capture data and manipulate applications just like humans do. They interpret, trigger responses and communicate with other systems in order to perform on a vast variety of repetitive tasks. Only substantially better: an RPA software robot never sleeps and makes zero mistakes.
 """
 
 colors = ['#9de5fc', '#d1fc9d', '#fcfc9d', '#fcb39d', '#a29dfc', '#e79dfc', '#a89dfc', '#49e65e', '#49c1e6', '#fff242']
