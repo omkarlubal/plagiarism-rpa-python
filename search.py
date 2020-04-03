@@ -70,40 +70,71 @@ def partial_ratio(s1, s2):
   for match in matching_block_of_max:
       # print(shorter[match.a:match.a + match.size], end=" =?? ")
       # print(long_substr[match.b:match.b + match.size])
-      if(match.size > 10):
+      if(match.size > 50):
         substrings.append([match.a, match.a + match.size])
 
   return [max_score*100, matching_block_of_max, substrings]
 
-def get_colored_html(pdf_content, substrings, link, index):
-    if(len(substrings) <= 0):
-        return ""
 
-    current_color = colors[index % (len(colors) - 1)]
+links = []
+def get_colored_html(pdf_content, cleaned_matches):
+    global links
     output = "<br><hr><br>"
     lastIndex = None
-    for substring in substrings:
-        output += pdf_content[lastIndex:substring[0]]
-        output += "<span style='background-color:"+current_color+"'>"+pdf_content[substring[0]:substring[1]] + "</span>"
-        lastIndex = substring[1]
+    index = 0
+    for block in cleaned_matches:
+        current_color = colors[index % (len(colors) - 1)]
+        links.append(block[2])
+        output += "<span style='background-color:"+current_color+"'>"+pdf_content[block[0]:block[1]] + "</span> <sup style='background-color: #0008; padding: 5px; color: #fff;'>" + str(len(links) - 1) + "</sup>"
+        index = index + 1
+        lastIndex = block[1]
         
-    lastItem = substrings[len(substrings) - 1][1]
+    lastItem = cleaned_matches[len(cleaned_matches) - 1][1]
     output += pdf_content[lastItem:None] + "<br>"
 
     return output
 
 
-def match_content(Str1, Str2):
+def match_content(Str1, Str2, link):
     ratio, matched_blocks, substrings = partial_ratio(Str1.lower(), Str2.lower())
-    # for substring in substrings:
-    #     print(Str1[substring[0]:substring[1]], end="\n\n---------\n")
-    # print("======================")
+    for substring in substrings:
+        substring.append(link)
+        
     return [ratio, substrings]
 
 
     # if(match_percentage > 30):
     #     print("Bro gotcha! {} percent copied from {}. What is this behaviour?".format(match_percentage, link))
 
+
+
+def cleaninfy_output(matchingStrings):
+  outputBlocks = [];
+  for match in matchingStrings:
+    for block in match: 
+      outputBlocks.append(block)
+
+  outputBlocks.sort(key= lambda x: [x[0], x[0] - x[1]])
+
+  # safeZone = []
+  # outputBlocks = [[0, 14], [0, 200], [10, 200], [130, 245]]
+
+  safe_zone=[]
+  safe_zone.append(outputBlocks[0])
+
+  for i in range(1 , len(outputBlocks)):
+    if outputBlocks[i][0] >= safe_zone[-1][0] and outputBlocks[i][1] <= safe_zone[-1][1]:
+      continue
+    else:
+      safe_zone.append(outputBlocks[i])
+
+  # 3) correct overlapping indexes such that they dont touch each other
+  for i in range(1,len(safe_zone)):
+    if safe_zone[i][0] <= safe_zone[i-1][1]:
+      safe_zone[i][0] = safe_zone[i-1][1]+1 
+
+  return safe_zone
+    
 
 def convert_pdf_to_txt(path):
     rsrcmgr = PDFResourceManager()
@@ -130,38 +161,59 @@ def convert_pdf_to_txt(path):
 
 
 def mainEngine(content):
+    global links
     result = google_search(content, my_api_key, my_cse_id)
     data = json.loads(json.dumps(result))
     highest_percentage = 0;
     ans = ""
     index = 0
+    all_matched_strings = []
+
     for item in data['items']:
         if (item['link'].find('.pdf') > 0):
             continue
 
         scrapped_content = web_scrape(item['link'])
-        match_percentage, matched_string = match_content(content, scrapped_content)
+        match_percentage, matched_string = match_content(content, scrapped_content, item['link'])
         if match_percentage > highest_percentage:
             highest_percentage = match_percentage
 
-        print(matched_string)
-        ans += get_colored_html(content, matched_string, item['link'], index)
-        ans += "<br>{}% of content was copied from <b>{}</b>\n <br>".format(match_percentage, item['link'])
+        if(len(matched_string) > 0):
+            all_matched_strings.append(matched_string)
+        # ans += get_colored_html(content, matched_string, item['link'], index)
+        # ans += "<br>{0}% of content was copied from <a href='{1}'>{1}</a>\n <br>".format(match_percentage, item['link'])
         index += 1
 
-    ans += "<br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
+
+    ans += """
+    <style>
+    body{padding: 100px}
+    </style>
+    """
+    cleaned_matches = cleaninfy_output(all_matched_strings)
+    colored_html = get_colored_html(content, cleaned_matches)        
+    ans += colored_html
+
+    ans += "<br><hr>"
+    for i in range(len(links)):
+        ans += ("<br><i>" + str(i) +"</i>: <a href='"+ links[i]+"'>" + links[i] + "</a>")
+    ans += "<br><br><hr>"
+
+    ans += "<br><br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
 
     if highest_percentage >= 70:
         ans += "<br> \nSorry but your paper is rejected due to high plagiarism. Please try again later."
     else:
         ans += "<br> \nCongratulations your paper has been accepted!"
+    # print(cleaninfy_output(all_matched_strings))
     return ans
 
 
 # content = str(input())
 
 content = """
-Robotic Process Automation is the technology that allows anyone today to configure computer software, or a “robot” to emulate and integrate the actions of a human interacting within digital systems to execute a business process. RPA robots utilize the user interface to capture data and manipulate applications just like humans do. They interpret, trigger responses and communicate with other systems in order to perform on a vast variety of repetitive tasks. Only substantially better: an RPA software robot never sleeps and makes zero mistakes.
+Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. 
+As an asynchronous event-driven JavaScript runtime, Node.js is designed to build scalable network applications. In the following "hello world" example, many connections can be handled concurrently. Upon each connection, the callback is fired, but if there is no work to be done, Node.js will sleep.
 """
 
 colors = ['#9de5fc', '#d1fc9d', '#fcfc9d', '#fcb39d', '#a29dfc', '#e79dfc', '#a89dfc', '#49e65e', '#49c1e6', '#fff242']
