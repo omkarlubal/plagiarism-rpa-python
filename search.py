@@ -79,13 +79,14 @@ def partial_ratio(s1, s2):
 links = []
 def get_colored_html(pdf_content, cleaned_matches):
     global links
+    colors = ['#9de5fc', '#d1fc9d', '#fcfc9d', '#fcb39d', '#a29dfc', '#e79dfc', '#a89dfc', '#49e65e', '#49c1e6', '#fff242']
     output = "<br><hr><br>"
     lastIndex = None
     index = 0
     for block in cleaned_matches:
         current_color = colors[index % (len(colors) - 1)]
         links.append(block[2])
-        output += "<span style='background-color:"+current_color+"'>"+pdf_content[block[0]:block[1]] + "</span> <sup style='background-color: #0008; padding: 5px; color: #fff;'>" + str(len(links) - 1) + "</sup>"
+        output += "<span style='background-color:"+current_color+"'>"+pdf_content[block[0]:block[1]] + "</span> <sup style='background-color: #0008; padding: 5px; color: #fff;'>" + str(len(links)) + "</sup>"
         index = index + 1
         lastIndex = block[1]
         
@@ -184,7 +185,7 @@ def mainEngine(content):
         # ans += "<br>{0}% of content was copied from <a href='{1}'>{1}</a>\n <br>".format(match_percentage, item['link'])
         index += 1
 
-
+    ans += "Result of your submission. <br>"
     ans += """
     <style>
     body{padding: 100px}
@@ -196,12 +197,12 @@ def mainEngine(content):
 
     ans += "<br><hr>"
     for i in range(len(links)):
-        ans += ("<br><i>" + str(i) +"</i>: <a href='"+ links[i]+"'>" + links[i] + "</a>")
+        ans += ("<br><i>" + str(i+1) +"</i>: <a href='"+ links[i]+"'>" + links[i] + "</a>")
     ans += "<br><br><hr>"
 
     ans += "<br><br> \nHighest Plagiarism Percentage: {}%".format(highest_percentage)
 
-    if highest_percentage >= 70:
+    if highest_percentage >= 30:
         ans += "<br> \nSorry but your paper is rejected due to high plagiarism. Please try again later."
     else:
         ans += "<br> \nCongratulations your paper has been accepted!"
@@ -211,15 +212,15 @@ def mainEngine(content):
 
 # content = str(input())
 
-content = """
-Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. 
-As an asynchronous event-driven JavaScript runtime, Node.js is designed to build scalable network applications. In the following "hello world" example, many connections can be handled concurrently. Upon each connection, the callback is fired, but if there is no work to be done, Node.js will sleep.
-"""
+# content = """
+# Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. 
+# As an asynchronous event-driven JavaScript runtime, Node.js is designed to build scalable network applications. In the following "hello world" example, many connections can be handled concurrently. Upon each connection, the callback is fired, but if there is no work to be done, Node.js will sleep.
+# """
 
-colors = ['#9de5fc', '#d1fc9d', '#fcfc9d', '#fcb39d', '#a29dfc', '#e79dfc', '#a89dfc', '#49e65e', '#49c1e6', '#fff242']
+# colors = ['#9de5fc', '#d1fc9d', '#fcfc9d', '#fcb39d', '#a29dfc', '#e79dfc', '#a89dfc', '#49e65e', '#49c1e6', '#fff242']
 
-htmlFile = open("out.html", "w");
-htmlFile.write(mainEngine(content))
-htmlFile.close()
+# htmlFile = open("out.html", "w");
+# htmlFile.write(mainEngine(content))
+# htmlFile.close()
 # scrapped_content = web_scrape("https://en.wikipedia.org/wiki/Michael_Madana_Kama_Rajan")
 # match_content(content, scrapped_content)
